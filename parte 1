@@ -1,0 +1,97 @@
+import datetime  
+
+trabajadores = []
+
+turnos = {
+    "M": {"nombre": "Matutino", "entrada": "07:00", "salida": "15:00", "dias": ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]},
+    "V": {"nombre": "Vespertino", "entrada": "15:00", "salida": "23:00", "dias": ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]},
+    "N": {"nombre": "Nocturno", "entrada": "23:00", "salida": "07:00", "dias": ["Martes", "Miércoles", "Jueves", "Viernes"]},
+}
+
+def registrar_trabajador():
+    nombre = input("Nombre: ")
+    edad = input("Edad: ")
+    genero = input("Género: ")
+    especialidad = input("Área o estudios: ")
+    turno = input("Turno (M = Matutino, V = Vespertino, N = Nocturno): ").upper()
+    numero = len(trabajadores) + 1  
+    trabajador = {
+        "nombre": nombre,
+        "edad": edad,
+        "genero": genero,
+        "especialidad": especialidad,
+        "turno": turno,
+        "numero": numero,
+        "retardos_menores": 0,
+        "retardos_mayores": 0,
+        "faltas": 0
+    }
+
+    trabajadores.append(trabajador)
+    print("Registrado. Su número de control es:", numero)
+
+def registrar_asistencia():
+    num = int(input("Número de control: "))
+    entrada = input("Hora de entrada (ejemplo 07:05): ")
+    dia = input("Día de la semana (ej. Lunes): ").capitalize()
+
+    for t in trabajadores:
+        if t["numero"] == num:
+            turno = turnos[t["turno"]]
+
+            if dia not in turno["dias"]:
+                print("Hoy no trabaja.")
+                return
+
+            hora_turno = datetime.datetime.strptime(turno["entrada"], "%H:%M")
+            hora_llegada = datetime.datetime.strptime(entrada, "%H:%M")
+            diferencia = (hora_llegada - hora_turno).total_seconds() / 60
+
+            if diferencia <= 10:
+                print("Llegó a tiempo.")
+            elif 10 < diferencia <= 11:
+                if t["retardos_menores"] < 3:
+                    t["retardos_menores"] += 1
+                    print("Retardo menor. Lleva:", t["retardos_menores"])
+                else:
+                    t["faltas"] += 1
+                    print("Ya tuvo 3 retardos menores. Es falta. Faltas:", t["faltas"])
+            elif 11 < diferencia <= 30:
+                if t["retardos_mayores"] < 2:
+                    t["retardos_mayores"] += 1
+                    print("Retardo mayor. Lleva:", t["retardos_mayores"])
+                else:
+                    t["faltas"] += 1
+                    print("Ya tuvo 2 retardos mayores. Es falta. Faltas:", t["faltas"])
+            else:
+                t["faltas"] += 1
+                print("Llegó muy tarde. Se cuenta como falta. Faltas:", t["faltas"])
+            return
+    print("No se encontró ese número de control.")
+
+def ver_trabajadores():
+    for t in trabajadores:
+        print(f"{t['numero']} - {t['nombre']} | Turno: {t['turno']} | Faltas: {t['faltas']}")
+
+def menu():
+    while True:
+        print("\n--- Menú Principal ---")
+        print("1. Registrar trabajador")
+        print("2. Registrar asistencia")
+        print("3. Ver trabajadores")
+        print("4. Salir")
+
+        opcion = input("Opción: ")
+
+        if opcion == "1":
+            registrar_trabajador()
+        elif opcion == "2":
+            registrar_asistencia()
+        elif opcion == "3":
+            ver_trabajadores()
+        elif opcion == "4":
+            break
+        else:
+            print("Opción no válida.")
+
+menu()
