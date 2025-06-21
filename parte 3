@@ -1,7 +1,11 @@
-import datetime
+import tkinter as tk
+from tkinter import messagebox 
+import datetime  
 
 class Hospital:
-    def __init__(self):
+    def __init__(self, root):
+        self.root = root  
+        self.root.title("Sistema de Hospital")  
         self.trabajadores = []
         self.turnos = {
             "M": {"nombre": "Matutino", "entrada": "07:00", "salida": "15:00", "dias": ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]},
@@ -9,59 +13,98 @@ class Hospital:
             "N": {"nombre": "Nocturno", "entrada": "23:00", "salida": "07:00", "dias": ["Martes", "Miércoles", "Jueves", "Viernes"]},
         }
 
+        self.menu_principal() 
+    def limpiar(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+    def menu_principal(self):
+        self.limpiar()
+        tk.Label(self.root, text="Menú Principal", font=("Arial", 16)).pack(pady=10)
+        tk.Button(self.root, text="Registrar Trabajador", command=self.registrar_trabajador).pack(pady=5)
+        tk.Button(self.root, text="Registrar Asistencia", command=self.registrar_asistencia).pack(pady=5)
+        tk.Button(self.root, text="Ver Trabajadores", command=self.ver_trabajadores).pack(pady=5)
+        tk.Button(self.root, text="Salir", command=self.root.quit).pack(pady=5)
+
+
     def registrar_trabajador(self):
-        print("\n--- Registrar Trabajador ---")
-        nombre = input("Nombre: ")
-        nacimiento = input("Fecha de nacimiento: ")
-        genero = input("Género: ")
-        domicilio = input("Domicilio: ")
-        telefono = input("Numero de teléfono: ")
-        correo = input("Correo electrónico: ")
-        grado = input("Grado de estudios: ")
-        especialidad = input("Área o estudios: ")
-        cedula = input("Cédula profesional: ")
-        contratacion = input("Tipo de contratación: ")
-        turno = input("Turno (M = Matutino, V = Vespertino, N = Nocturno): ").upper()
-        ingreso = input("Fecha de ingreso: ")
-        numero = len(self.trabajadores) + 1
+      self.limpiar()
+      campos = [
+            "Nombre", "Fecha de nacimiento", "Género", "Domicilio", "Numero de teléfono",
+            "Correo electrónico", "Grado de estudios", "Área o estudios", "Cédula profesional",
+            "Tipo de contratación", "Turno (M/V/N)", "Fecha de ingreso"
+        ]
+      entradas = {}  
 
-        trabajador = {
-            "nombre": nombre,
-            "edad": nacimiento,
-            "genero": genero,
-            "domicilio": domicilio,
-            "telefono": telefono,
-            "correo": correo,
-            "grado": grado,
-            "especialidad": especialidad,
-            "cedula": cedula,
-            "contratacion": contratacion,
-            "turno": turno,
-            "ingreso": ingreso,
-            "numero": numero,
-            "retardos_menores": 0,
-            "retardos_mayores": 0,
-            "faltas": 0
-        }
+      for campo in campos:
+            tk.Label(self.root, text=campo).pack()
+            entrada = tk.Entry(self.root)
+            entrada.pack()
+            entradas[campo] = entrada
 
-        self.trabajadores.append(trabajador)
-        print("Registrado con número de control:", numero)
+      def guardar():
+            try:
+                numero = len(self.trabajadores) + 1
+                trabajador = {
+                    "nombre": entradas["Nombre"].get(),
+                    "edad": entradas["Fecha de nacimiento"].get(),
+                    "genero": entradas["Género"].get(),
+                    "domicilio": entradas["Domicilio"].get(),
+                    "telefono": entradas["Numero de teléfono"].get(),
+                    "correo": entradas["Correo electrónico"].get(),
+                    "grado": entradas["Grado de estudios"].get(),
+                    "especialidad": entradas["Área o estudios"].get(),
+                    "cedula": entradas["Cédula profesional"].get(),
+                    "contratacion": entradas["Tipo de contratación"].get(),
+                    "turno": entradas["Turno (M/V/N)"].get().upper(),
+                    "ingreso": entradas["Fecha de ingreso"].get(),
+                    "numero": numero,
+                    "retardos_menores": 0,
+                    "retardos_mayores": 0,
+                    "faltas": 0
+                  }
 
+                self.trabajadores.append(trabajador)
+                messagebox.showinfo("Registrado", f"Registrado con número de control: {numero}") 
+                self.menu_principal()
+            except Exception as e:
+                messagebox.showerror("Error", f"Error al registrar: {e}")
+
+      tk.Button(self.root, text="Guardar", command=guardar).pack(pady=10)
+      tk.Button(self.root, text="Volver", command=self.menu_principal).pack()
+        
     def registrar_asistencia(self):
-        print("\n--- Registrar Asistencia ---")
-        num = int(input("Número de control: "))
-        entrada = input("Hora de entrada (ej. 07:05): ")
-        dia = input("Día de la semana: ").capitalize()
+        self.limpiar()
+        tk.Label(self.root, text="Número de control").pack()
+        entrada_num = tk.Entry(self.root)
+        entrada_num.pack()
 
-        for t in self.trabajadores:
-            if t["numero"] == num:
-                turno_info = self.turnos.get(t["turno"])
+        tk.Label(self.root, text="Hora de entrada (ej. 07:05)").pack()
+        entrada_hora = tk.Entry(self.root)
+        entrada_hora.pack()
+
+        tk.Label(self.root, text="Día de la semana").pack()
+        entrada_dia = tk.Entry(self.root)
+        entrada_dia.pack()
+
+        def guardar_asistencia():
+            try:
+                num = int(entrada_num.get())
+                entrada = entrada_hora.get().strip()
+                dia = entrada_dia.get().capitalize().strip()
+
+                trabajador = next((t for t in self.trabajadores if t["numero"] == num), None)
+                if not trabajador:
+                    messagebox.showerror("Error", "No se encontró ese número de control.")
+                    return
+
+                turno_info = self.turnos.get(trabajador["turno"])
                 if not turno_info:
-                    print("Turno inválido.")
+                    messagebox.showerror("Error", "Turno inválido.")
                     return
 
                 if dia not in turno_info["dias"]:
-                    print("Hoy no trabaja.")
+                    messagebox.showwarning("Atención", "Hoy no trabaja.")
                     return
 
                 hora_turno = datetime.datetime.strptime(turno_info["entrada"], "%H:%M")
@@ -69,54 +112,45 @@ class Hospital:
                 diferencia = (hora_llegada - hora_turno).total_seconds() / 60
 
                 if diferencia <= 10:
-                    print("Llegó a tiempo.")
+                    mensaje("Llegó a tiempo.")
                 elif 10 < diferencia <= 15:
-                    if t["retardos_menores"] < 3:
-                        t["retardos_menores"] += 1
-                        print("Retardo menor. Lleva:", t["retardos_menores"])
+                    if trabajador["retardos_menores"] < 3:
+                       trabajador["retardos_menores"] += 1
+                       mensaje = f"Retardo menor. Lleva: {trabajador['retardos_menores']}"
                     else:
-                        t["faltas"] += 1
-                        print("Ya tuvo 3 retardos menores. Es falta. Faltas:", t["faltas"])
+                        trabajador["faltas"] += 1
+                        mensaje = f"ya tuvo 3 retardos menores. Es falta. Faltas: {trabajador['faltas']}"
                 elif 15 < diferencia <= 30:
-                    if t["retardos_mayores"] < 2:
-                        t["retardos_mayores"] += 1
-                        print("Retardo mayor. Lleva:", t["retardos_mayores"])
+                    if trabajador["retardos_mayores"] < 2:
+                        trabajador["retardos_mayores"] += 1
+                        mensaje = f"Retardo mayor. Lleva: {trabajador['retardos_mayores']}"
+                
                     else:
-                        t["faltas"] += 1
-                        print("Ya tuvo 2 retardos mayores. Es falta. Faltas:", t["faltas"])
+                        trabajador["faltas"] += 1
+                        mensaje = f"Ya tuvo 2 retardos mayores.Es falta. Faltas: {trabajador['faltas']}"
                 else:
-                    t["faltas"] += 1
-                    print("Llegó muy tarde. Se cuenta como falta. Faltas:", t["faltas"])
-                return
+                    trabajador["faltas"] += 1
+                    mensaje = f"Llegó muy tarde. Se cuenta como falta. Faltas: {trabajador['faltas']}"
+          
+                messagebox.showinfo("Resultado", mensaje) 
+                self.menu_principal()
+            except Exception as e:
+                messagebox.showerror("Error", f"Error al registrar asistencia: {e}")  
 
-        print("No se encontró ese número de control.")
+        tk.Button(self.root, text="Registrar", command=guardar_asistencia).pack(pady=10)
+        tk.Button(self.root, text="Volver", command=self.menu_principal).pack()
 
     def ver_trabajadores(self):
-        print("\n--- Lista de Trabajadores ---")
+       
+        self.limpiar()
+        tk.Label(self.root, text="Lista de Trabajadores", font=("Arial", 14)).pack(pady=5)
         for t in self.trabajadores:
-            print(f"{t['numero']} - {t['nombre']} | Turno: {t['turno']} | Faltas: {t['faltas']}")
+            texto = f"{t['numero']} - {t['nombre']} | Turno: {t['turno']} | Faltas: {t['faltas']}"
+            tk.Label(self.root, text=texto).pack()
+        tk.Button(self.root, text="Volver", command=self.menu_principal).pack(pady=10)
 
-    def menu(self):
-        while True:
-            print("\n--- Menú Principal ---")
-            print("1. Registrar trabajador")
-            print("2. Registrar asistencia")
-            print("3. Ver trabajadores")
-            print("4. Salir")
 
-            opcion = input("Opción: ")
-
-            if opcion == "1":
-                self.registrar_trabajador()
-            elif opcion == "2":
-                self.registrar_asistencia()
-            elif opcion == "3":
-                self.ver_trabajadores()
-            elif opcion == "4":
-                print("Adiós.")
-                break
-            else:
-                print("Opción no válida.")
-
-hospital = Hospital()
-hospital.menu()
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = Hospital(root)
+    root.mainloop()
