@@ -38,7 +38,8 @@ class Hospital:
         tk.Button(self.root, text="Ver Trabajadores", command=self.ver_trabajadores).pack(pady=5)
         tk.Button(self.root, text="Solicitar Vacaciones", command=self.solicitar_vacaciones).pack(pady=5) 
         tk.Button(self.root, text="Solicitar Día Económico", command=self.solicitar_dia_economico).pack(pady=5)  
-        tk.Button(self.root, text="Ver Días Descanso Obligatorio", command=self.ver_dias_descanso).pack(pady=5)  
+        tk.Button(self.root, text="Ver Días Descanso Obligatorio", command=self.ver_dias_descanso).pack(pady=5) 
+        tk.Button(self.root, text="Registrar Incapacidad o Licencia", command=self.registrar_incapacidad_licencia).pack(pady=5) 
         tk.Button(self.root, text="Salir", command=self.root.quit).pack(pady=5)
 
 
@@ -77,7 +78,9 @@ class Hospital:
                     "retardos_menores": 0,
                     "retardos_mayores": 0,
                     "faltas": 0,
-                    "dias_economicos": 8
+                    "dias_economicos": 8,  
+                    "incapacidades": [],  
+                    "licencias": []       
                   }
 
                 self.trabajadores.append(trabajador)
@@ -88,6 +91,26 @@ class Hospital:
 
       tk.Button(self.root, text="Guardar", command=guardar).pack(pady=10)
       tk.Button(self.root, text="Volver", command=self.menu_principal).pack()
+
+    def registrar_incapacidad_licencia(self):  # NUEVO MÉTODO AGREGADO
+        self.limpiar()
+        tk.Label(self.root, text="Número de control del trabajador:").pack()
+        entrada_num = tk.Entry(self.root)
+        entrada_num.pack()
+
+        tk.Label(self.root, text="Tipo (Incapacidad o Licencia):").pack()
+        entrada_tipo = tk.Entry(self.root)
+        entrada_tipo.pack()
+
+        tk.Label(self.root, text="Fecha de inicio (YYYY-MM-DD):").pack()
+        entrada_inicio = tk.Entry(self.root)
+        entrada_inicio.pack()
+
+        tk.Label(self.root, text="Fecha de fin (YYYY-MM-DD):").pack()
+        entrada_fin = tk.Entry(self.root)
+        entrada_fin.pack()
+        tk.Button(self.root, text="solicitar", command=self.menu_principal).pack(pady=10)
+        tk.Button(self.root, text="Volver", command=self.menu_principal).pack(pady=10)
 
     def ver_dias_descanso(self): 
         self.limpiar()
