@@ -177,6 +177,13 @@ class Hospital:
         seleccion = tk.StringVar()
         tk.Radiobutton(self.root, text="12-feb al 23-feb", variable=seleccion, value="1").pack()
         tk.Radiobutton(self.root, text="26-feb al 08-mar", variable=seleccion, value="2").pack()
+        tk.Radiobutton(self.root, text="Periodo Extraordinario", variable=seleccion, value="extra").pack()
+
+        nivel_riesgo = tk.StringVar()
+        tk.Label(self.root, text="Nivel de Riesgo (si es extraordinario):").pack() 
+        tk.Radiobutton(self.root, text="Alto Riesgo", variable=nivel_riesgo, value="Alto").pack() 
+        tk.Radiobutton(self.root, text="Mediano Riesgo", variable=nivel_riesgo, value="Mediano").pack()  
+        tk.Radiobutton(self.root, text="Bajo Riesgo", variable=nivel_riesgo, value="Bajo").pack()  
 
         def asignar():
             try:
@@ -194,6 +201,12 @@ class Hospital:
                 area = trabajador["especialidad"]
                 ingreso_str = trabajador["ingreso"]
                 antiguedad = datetime.datetime.now().date() - datetime.datetime.strptime(ingreso_str, "%Y-%m-%d").date()
+
+                if periodo == "extra":
+                    riesgo = nivel_riesgo.get() 
+                    if not riesgo:
+                        messagebox.showwarning("Vacaciones", "Selecciona el nivel de riesgo.")
+                        return
 
                
                 for v in self.vacaciones_registradas:
@@ -213,6 +226,7 @@ class Hospital:
                     "nombre": trabajador["nombre"],
                     "area": area,
                     "periodo": periodo
+                    "riesgo": "N/A"  
                 })
 
                 messagebox.showinfo("Vacaciones", "Vacaciones asignadas correctamente.")
