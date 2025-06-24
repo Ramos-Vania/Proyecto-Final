@@ -149,12 +149,20 @@ class Hospital:
         tk.Button(self.root, text="Solicitar", command=procesar).pack(pady=10)
         tk.Button(self.root, text="Volver", command=self.menu_principal).pack()
 
-    def ver_trabajadores(self):
+    def ver_trabajadores(self):  # ← MODIFICADO
         self.limpiar()
         tk.Label(self.root, text="Lista de Trabajadores", font=("Arial", 14)).pack(pady=5)
         for t in self.trabajadores:
-            texto = f"{t['numero']} - {t['nombre']} | Faltas: {t['faltas']} | Días económicos: {t['dias_economicos']}" 
+            texto = f"{t['numero']} - {t['nombre']} | Faltas: {t['faltas']} | Económicos: {t['dias_economicos']}"
             tk.Label(self.root, text=texto).pack()
+
+            if t["vacaciones"]:
+                tk.Label(self.root, text=f"  Vacaciones: {t['vacaciones']}").pack()
+            if t["incapacidades"]:
+                tk.Label(self.root, text=f"  Incapacidades: {t['incapacidades']}").pack()
+            if t["licencias"]:
+                tk.Label(self.root, text=f"  Licencias: {t['licencias']}").pack()
+
         tk.Button(self.root, text="Volver", command=self.menu_principal).pack(pady=10)
         
     def registrar_asistencia(self):
