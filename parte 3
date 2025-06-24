@@ -6,6 +6,7 @@ class Hospital:
     def __init__(self, root):
         self.root = root  
         self.root.title("Sistema de Hospital")  
+        self.root.configure(bg="lightgreen")
         self.trabajadores = []
         self.vacaciones_registradas = [] 
 
