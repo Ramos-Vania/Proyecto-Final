@@ -7,11 +7,18 @@ class Hospital:
         self.root = root  
         self.root.title("Sistema de Hospital")  
         self.trabajadores = []
+        self.vacaciones_registradas = [] 
+
         self.turnos = {
             "M": {"nombre": "Matutino", "entrada": "07:00", "salida": "15:00", "dias": ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]},
             "V": {"nombre": "Vespertino", "entrada": "15:00", "salida": "23:00", "dias": ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]},
             "N": {"nombre": "Nocturno", "entrada": "23:00", "salida": "07:00", "dias": ["Martes", "Miércoles", "Jueves", "Viernes"]},
         }
+
+        self.periodos_vacacionales = [ 
+            (datetime.date(2024, 2, 12), datetime.date(2024, 2, 23)),
+            (datetime.date(2024, 2, 26), datetime.date(2024, 3, 8))
+        ]
 
         self.menu_principal() 
     def limpiar(self):
@@ -24,6 +31,7 @@ class Hospital:
         tk.Button(self.root, text="Registrar Trabajador", command=self.registrar_trabajador).pack(pady=5)
         tk.Button(self.root, text="Registrar Asistencia", command=self.registrar_asistencia).pack(pady=5)
         tk.Button(self.root, text="Ver Trabajadores", command=self.ver_trabajadores).pack(pady=5)
+        tk.Button(self.root, text="Solicitar Vacaciones", command=self.solicitar_vacaciones).pack(pady=5) 
         tk.Button(self.root, text="Salir", command=self.root.quit).pack(pady=5)
 
 
@@ -87,40 +95,50 @@ class Hospital:
         entrada_dia = tk.Entry(self.root)
         entrada_dia.pack()
 
+        tk.Label(self.root, text="Fecha actual (yyyy-mm-dd)").pack()  
+        entrada_fecha = tk.Entry(self.root)
+        entrada_fecha.pack()
+
         def guardar_asistencia():
             try:
-                num = int(entrada_num.get())
-                entrada = entrada_hora.get().strip()
-                dia = entrada_dia.get().capitalize().strip()
+               fecha_actual = datetime.datetime.strptime(entrada_fecha.get(), "%Y-%m-%d").date()
+               for inicio, fin in self.periodos_vacacionales: 
+                    if inicio <= fecha_actual <= fin:
+                        messagebox.showwarning("Vacaciones", "No se puede registrar asistencia: periodo vacacional.")
+                        return
 
-                trabajador = next((t for t in self.trabajadores if t["numero"] == num), None)
-                if not trabajador:
+               num = int(entrada_num.get())
+               entrada = entrada_hora.get().strip()
+               dia = entrada_dia.get().capitalize().strip()
+
+               trabajador = next((t for t in self.trabajadores if t["numero"] == num), None)
+               if not trabajador:
                     messagebox.showerror("Error", "No se encontró ese número de control.")
                     return
 
-                turno_info = self.turnos.get(trabajador["turno"])
-                if not turno_info:
+               turno_info = self.turnos.get(trabajador["turno"])
+               if not turno_info:
                     messagebox.showerror("Error", "Turno inválido.")
                     return
 
-                if dia not in turno_info["dias"]:
+               if dia not in turno_info["dias"]:
                     messagebox.showwarning("Atención", "Hoy no trabaja.")
                     return
 
-                hora_turno = datetime.datetime.strptime(turno_info["entrada"], "%H:%M")
-                hora_llegada = datetime.datetime.strptime(entrada, "%H:%M")
-                diferencia = (hora_llegada - hora_turno).total_seconds() / 60
+               hora_turno = datetime.datetime.strptime(turno_info["entrada"], "%H:%M")
+               hora_llegada = datetime.datetime.strptime(entrada, "%H:%M")
+               diferencia = (hora_llegada - hora_turno).total_seconds() / 60
 
-                if diferencia <= 10:
+               if diferencia <= 10:
                     mensaje("Llegó a tiempo.")
-                elif 10 < diferencia <= 15:
+               elif 10 < diferencia <= 15:
                     if trabajador["retardos_menores"] < 3:
                        trabajador["retardos_menores"] += 1
                        mensaje = f"Retardo menor. Lleva: {trabajador['retardos_menores']}"
                     else:
                         trabajador["faltas"] += 1
                         mensaje = f"ya tuvo 3 retardos menores. Es falta. Faltas: {trabajador['faltas']}"
-                elif 15 < diferencia <= 30:
+               elif 15 < diferencia <= 30:
                     if trabajador["retardos_mayores"] < 2:
                         trabajador["retardos_mayores"] += 1
                         mensaje = f"Retardo mayor. Lleva: {trabajador['retardos_mayores']}"
@@ -128,12 +146,12 @@ class Hospital:
                     else:
                         trabajador["faltas"] += 1
                         mensaje = f"Ya tuvo 2 retardos mayores.Es falta. Faltas: {trabajador['faltas']}"
-                else:
+               else:
                     trabajador["faltas"] += 1
                     mensaje = f"Llegó muy tarde. Se cuenta como falta. Faltas: {trabajador['faltas']}"
           
-                messagebox.showinfo("Resultado", mensaje) 
-                self.menu_principal()
+                    messagebox.showinfo("Resultado", mensaje) 
+                    self.menu_principal()
             except Exception as e:
                 messagebox.showerror("Error", f"Error al registrar asistencia: {e}")  
 
@@ -148,6 +166,52 @@ class Hospital:
             texto = f"{t['numero']} - {t['nombre']} | Turno: {t['turno']} | Faltas: {t['faltas']}"
             tk.Label(self.root, text=texto).pack()
         tk.Button(self.root, text="Volver", command=self.menu_principal).pack(pady=10)
+
+    def solicitar_vacaciones(self):  
+        self.limpiar()
+        tk.Label(self.root, text="Número de control del trabajador:").pack()
+        entrada_num = tk.Entry(self.root)
+        entrada_num.pack()
+
+        tk.Label(self.root, text="Selecciona periodo de vacaciones:").pack()
+        seleccion = tk.StringVar()
+        tk.Radiobutton(self.root, text="12-feb al 23-feb", variable=seleccion, value="1").pack()
+        tk.Radiobutton(self.root, text="26-feb al 08-mar", variable=seleccion, value="2").pack()
+
+        def asignar():
+            try:
+                num = int(entrada_num.get())
+                trabajador = next((t for t in self.trabajadores if t["numero"] == num), None)
+                if not trabajador:
+                    messagebox.showerror("Error", "Número de control no válido.")
+                    return
+
+                periodo = seleccion.get()
+                if not periodo:
+                    messagebox.showwarning("Vacaciones", "Debes seleccionar un periodo.")
+                    return
+
+                area = trabajador["especialidad"]
+                for v in self.vacaciones_registradas:
+                    if v["periodo"] == periodo and v["area"].lower() == area.lower():
+                        messagebox.showwarning("Vacaciones", "Ya hay alguien de tu área con esas fechas.")
+                        return
+
+                self.vacaciones_registradas.append({
+                    "numero": num,
+                    "nombre": trabajador["nombre"],
+                    "area": area,
+                    "periodo": periodo
+                })
+
+                messagebox.showinfo("Vacaciones", "Vacaciones asignadas correctamente.")
+                self.menu_principal()
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo asignar: {e}")
+
+        tk.Button(self.root, text="Solicitar", command=asignar).pack(pady=10)
+        tk.Button(self.root, text="Volver", command=self.menu_principal).pack()
+
 
 
 if __name__ == "__main__":
