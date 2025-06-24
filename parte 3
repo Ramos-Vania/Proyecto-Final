@@ -9,15 +9,20 @@ class Hospital:
         self.trabajadores = []
         self.vacaciones_registradas = [] 
 
+        self.periodos_vacacionales = [
+            (datetime.date(2025, 2, 12), datetime.date(2025, 2, 23)),
+            (datetime.date(2025, 2, 26), datetime.date(2025, 3, 8)),
+        ]
+
         self.turnos = {
             "M": {"nombre": "Matutino", "entrada": "07:00", "salida": "15:00", "dias": ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]},
             "V": {"nombre": "Vespertino", "entrada": "15:00", "salida": "23:00", "dias": ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]},
             "N": {"nombre": "Nocturno", "entrada": "23:00", "salida": "07:00", "dias": ["Martes", "Miércoles", "Jueves", "Viernes"]},
         }
 
-        self.periodos_vacacionales = [ 
-            (datetime.date(2024, 2, 12), datetime.date(2024, 2, 23)),
-            (datetime.date(2024, 2, 26), datetime.date(2024, 3, 8))
+        self.descansos_obligatorios = [ 
+            "2025-01-01", "2025-03-21", "2025-05-01",
+            "2025-09-16", "2025-11-20", "2025-12-25"
         ]
 
         self.menu_principal() 
@@ -32,6 +37,8 @@ class Hospital:
         tk.Button(self.root, text="Registrar Asistencia", command=self.registrar_asistencia).pack(pady=5)
         tk.Button(self.root, text="Ver Trabajadores", command=self.ver_trabajadores).pack(pady=5)
         tk.Button(self.root, text="Solicitar Vacaciones", command=self.solicitar_vacaciones).pack(pady=5) 
+        tk.Button(self.root, text="Solicitar Día Económico", command=self.solicitar_dia_economico).pack(pady=5)  
+        tk.Button(self.root, text="Ver Días Descanso Obligatorio", command=self.ver_dias_descanso).pack(pady=5)  
         tk.Button(self.root, text="Salir", command=self.root.quit).pack(pady=5)
 
 
@@ -69,7 +76,8 @@ class Hospital:
                     "numero": numero,
                     "retardos_menores": 0,
                     "retardos_mayores": 0,
-                    "faltas": 0
+                    "faltas": 0,
+                    "dias_economicos": 8
                   }
 
                 self.trabajadores.append(trabajador)
@@ -80,6 +88,51 @@ class Hospital:
 
       tk.Button(self.root, text="Guardar", command=guardar).pack(pady=10)
       tk.Button(self.root, text="Volver", command=self.menu_principal).pack()
+
+    def ver_dias_descanso(self): 
+        self.limpiar()
+        tk.Label(self.root, text="Días de Descanso Obligatorio", font=("Arial", 14)).pack(pady=5)
+        for d in self.descansos_obligatorios:
+            tk.Label(self.root, text=d).pack()
+        tk.Button(self.root, text="Volver", command=self.menu_principal).pack(pady=10)
+
+    def solicitar_dia_economico(self): 
+        self.limpiar()
+        tk.Label(self.root, text="Número de control del trabajador:").pack()
+        entrada_num = tk.Entry(self.root)
+        entrada_num.pack()
+
+        tk.Label(self.root, text="Fecha solicitada (YYYY-MM-DD):").pack()
+        entrada_fecha = tk.Entry(self.root)
+        entrada_fecha.pack()
+
+        def procesar():
+            try:
+                num = int(entrada_num.get())
+                fecha = entrada_fecha.get().strip()
+                trabajador = next((t for t in self.trabajadores if t["numero"] == num), None)
+                if not trabajador:
+                    messagebox.showerror("Error", "Trabajador no encontrado.")
+                    return
+                if trabajador["dias_economicos"] <= 0:
+                    messagebox.showwarning("Agotado", "Ya no tienes días económicos.")
+                    return
+                trabajador["dias_economicos"] -= 1
+                messagebox.showinfo("Concedido", f"Día económico concedido el {fecha}. Días restantes: {trabajador['dias_economicos']}")
+                self.menu_principal()
+            except:
+                messagebox.showerror("Error", "Datos inválidos.")
+
+        tk.Button(self.root, text="Solicitar", command=procesar).pack(pady=10)
+        tk.Button(self.root, text="Volver", command=self.menu_principal).pack()
+
+    def ver_trabajadores(self):
+        self.limpiar()
+        tk.Label(self.root, text="Lista de Trabajadores", font=("Arial", 14)).pack(pady=5)
+        for t in self.trabajadores:
+            texto = f"{t['numero']} - {t['nombre']} | Faltas: {t['faltas']} | Días económicos: {t['dias_economicos']}" 
+            tk.Label(self.root, text=texto).pack()
+        tk.Button(self.root, text="Volver", command=self.menu_principal).pack(pady=10)
         
     def registrar_asistencia(self):
         self.limpiar()
@@ -163,7 +216,7 @@ class Hospital:
         self.limpiar()
         tk.Label(self.root, text="Lista de Trabajadores", font=("Arial", 14)).pack(pady=5)
         for t in self.trabajadores:
-            texto = f"{t['numero']} - {t['nombre']} | Turno: {t['turno']} | Faltas: {t['faltas']}"
+            texto = f"{t['numero']} - {t['nombre']} | Faltas: {t['faltas']} | Días económicos: {t['dias_economicos']}"  
             tk.Label(self.root, text=texto).pack()
         tk.Button(self.root, text="Volver", command=self.menu_principal).pack(pady=10)
 
@@ -221,12 +274,12 @@ class Hospital:
                                 messagebox.showwarning("Vacaciones", "Otro trabajador de tu área con más antigüedad ya eligió esas fechas.")
                                 return
 
-                self.vacaciones_registradas.append({
+                self.vacaciones_registradas.append({  
                     "numero": num,
                     "nombre": trabajador["nombre"],
                     "area": area,
-                    "periodo": periodo
-                    "riesgo": "N/A"  
+                    "periodo": periodo,
+                    "riesgo": riesgo
                 })
 
                 messagebox.showinfo("Vacaciones", "Vacaciones asignadas correctamente.")
