@@ -192,10 +192,21 @@ class Hospital:
                     return
 
                 area = trabajador["especialidad"]
+                ingreso_str = trabajador["ingreso"]
+                antiguedad = datetime.datetime.now().date() - datetime.datetime.strptime(ingreso_str, "%Y-%m-%d").date()
+
+               
                 for v in self.vacaciones_registradas:
                     if v["periodo"] == periodo and v["area"].lower() == area.lower():
-                        messagebox.showwarning("Vacaciones", "Ya hay alguien de tu área con esas fechas.")
-                        return
+                        otra = next((t for t in self.trabajadores if t["numero"] == v["numero"]), None)
+                        if otra:
+                            otra_ant = datetime.datetime.now().date() - datetime.datetime.strptime(otra["ingreso"], "%Y-%m-%d").date()
+                            if antiguedad > otra_ant:
+                                self.vacaciones_registradas.remove(v)
+                                break
+                            else:
+                                messagebox.showwarning("Vacaciones", "Otro trabajador de tu área con más antigüedad ya eligió esas fechas.")
+                                return
 
                 self.vacaciones_registradas.append({
                     "numero": num,
